@@ -1,5 +1,6 @@
 import re
 
+import utils
 
 FIRST_AND_LAST_DIGIT = re.compile(r"(?:(\d).*(\d+)(?!.*\d)|(\d))")
 NUMBER_NAMES: dict[str, str] = {
@@ -43,8 +44,11 @@ def document_calibration(document: str, use_extended: bool = True) -> int:
     return sum(map(line_calibration, document.splitlines()))
 
 
-if __name__ == "__main__":
-    with open("day_one.txt", "r") as fp:
-        contents = fp.read()
+def main():
+    with utils.contents() as contents:
         print("Part one:", document_calibration(contents, use_extended=False))
         print("Part two:", document_calibration(contents))
+
+
+if __name__ == "__main__":
+    main()
