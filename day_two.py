@@ -2,6 +2,7 @@ import math
 import re
 from typing import Callable, Literal, TypeAlias
 import typing
+import utils
 
 ColorNames: TypeAlias = Literal["red", "green", "blue"]
 
@@ -46,11 +47,14 @@ def sum_of_powers(games: str):
     return sum(math.prod(game.values()) for game in max_per_game(games).values())
 
 
-if __name__ == "__main__":
-    with open("day_two.txt", "r") as fp:
-        contents = fp.read()
+def main():
+    with utils.contents() as contents:
         print(
             "Part one:",
             sum(possible_games({"red": 12, "green": 13, "blue": 14})(contents)),
         )
         print("Part two:", sum_of_powers(contents))
+
+
+if __name__ == "__main__":
+    main()
