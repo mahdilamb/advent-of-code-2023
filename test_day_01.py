@@ -1,10 +1,10 @@
-import day_one
+import day_01
 
 
 def test_part_one():
     """Test calibration value using digits only."""
     assert (
-        day_one.document_calibration(
+        day_01.document_calibration(
             """1abc2
 pqr3stu8vwx
 a1b2c3d4e5f
@@ -18,7 +18,7 @@ treb7uchet""",
 def test_part_two():
     """Test calibration that allows single digits to be spelt out."""
     assert (
-        day_one.document_calibration(
+        day_01.document_calibration(
             """two1nine
 eightwothree
 abcone2threexyz
