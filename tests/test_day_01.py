@@ -1,4 +1,4 @@
-import day_01
+from advent_of_code import day_01
 
 
 def test_part_one():

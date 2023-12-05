@@ -1,7 +1,7 @@
 import re
 import numpy as np
 from scipy.ndimage import maximum_filter, label
-import utils
+import advent_of_code.utils as utils
 
 SYMBOL = re.compile(r"([^.\d]+)", re.M)
 NUMBER = re.compile(r"([\d]+)", re.M)

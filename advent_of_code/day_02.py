@@ -2,7 +2,7 @@ import math
 import re
 from typing import Callable, Literal, TypeAlias
 import typing
-import utils
+import advent_of_code.utils as utils
 
 ColorNames: TypeAlias = Literal["red", "green", "blue"]
 

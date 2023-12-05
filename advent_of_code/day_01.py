@@ -1,6 +1,6 @@
 import re
 
-import utils
+import advent_of_code.utils as utils
 
 FIRST_AND_LAST_DIGIT = re.compile(r"(?:(\d).*(\d+)(?!.*\d)|(\d))")
 NUMBER_NAMES: dict[str, str] = {
