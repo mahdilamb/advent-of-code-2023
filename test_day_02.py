@@ -1,11 +1,11 @@
-import day_two
+import day_02
 
 
 def test_part_one():
     """Test that the game filter works."""
     assert (
         sum(
-            day_two.possible_games({"red": 12, "green": 13, "blue": 14})(
+            day_02.possible_games({"red": 12, "green": 13, "blue": 14})(
                 """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
     Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
     Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
@@ -20,7 +20,7 @@ def test_part_one():
 def test_part_two():
     """Test sum of the power of sets."""
     assert (
-        day_two.sum_of_powers(
+        day_02.sum_of_powers(
             """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
     Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
     Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
