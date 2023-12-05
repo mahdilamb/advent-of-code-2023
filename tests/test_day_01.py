@@ -29,3 +29,10 @@ zoneight234
         )
         == 281
     )
+
+
+if __name__ == "__main__":
+    import pytest
+    import sys
+
+    sys.exit(pytest.main([__file__] + ["-vv", "-s"]))

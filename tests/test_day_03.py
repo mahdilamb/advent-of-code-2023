@@ -41,3 +41,10 @@ def test_part_two():
         )
         == 467835
     )
+
+
+if __name__ == "__main__":
+    import pytest
+    import sys
+
+    sys.exit(pytest.main([__file__] + ["-vv", "-s"]))

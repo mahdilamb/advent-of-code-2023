@@ -2,7 +2,7 @@
 authors = [{name = "Mahdi Lamb", email = "mahdilamb@gmail.com"}]
 dependencies = ["numpy", "scipy"]
 name = "advent-of-code"
-version = "2023.12.03"
+version = "2023.12.04-1"
 [tool.setuptools.package-dir]
 "advent_of_code" = "advent_of_code"
 [project.optional-dependencies]
