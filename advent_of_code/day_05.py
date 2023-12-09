@@ -1,8 +1,9 @@
 from collections import defaultdict
+from collections.abc import Iterator
 import re
-from typing import Callable, Mapping, TypeAlias
+from typing import Callable, Mapping, NamedTuple, Optional, TypeAlias, Union
 
-from advent_of_code import utils
+from advent_of_code import sparse_ranges, utils
 
 Paths: TypeAlias = tuple[str, ...]
 SeedMappings: TypeAlias = dict[int, tuple[int, ...]]
@@ -25,23 +26,29 @@ def converter_factory(
     return converter
 
 
-def trails(input: str) -> tuple[Paths, SeedMappings]:
-    """Find the paths and the seed mappings from the input text."""
+def read_input(input: str):
     _seeds, _, maps = input.split("\n", maxsplit=2)
 
     paths = ["seed"]
-    almanac: Mapping[tuple[str, str], list[Callable[[int], int | None]]] = defaultdict(
-        list
-    )
+    almanac: Mapping[tuple[str, str], list[tuple[int, int, int]]] = defaultdict(list)
 
     for m in MAPS.finditer(maps):
         src_name, dest_name, _ranges = m.groups()
         paths.append(dest_name)
         for ranges in _ranges.splitlines():
-            fn = converter_factory(*map(int, DIGIT.findall(ranges)))
-
-            almanac[(src_name, dest_name)].append(fn)
+            almanac[(src_name, dest_name)].append(
+                tuple(map(int, DIGIT.findall(ranges)))
+            )
     seeds = tuple(map(int, DIGIT.findall(_seeds)))
+    return seeds, paths, dict(almanac)
+
+
+def trails(input: str) -> tuple[Paths, SeedMappings]:
+    """Find the paths and the seed mappings from the input text."""
+    seeds, paths, _almanac = read_input(input)
+    almanac: Mapping[tuple[str, str], list[Callable[[int], int | None]]] = {
+        k: [converter_factory(*w) for w in v] for k, v in _almanac.items()
+    }
     mapped: SeedMappings = {}
     for seed in seeds:
         path = [seed]
@@ -63,6 +70,74 @@ def lowest_location(input: str, loc: str) -> int:
     paths, mappings = trails(input)
     i = paths.index(loc)
     return min(mapping[i] for mapping in mappings.values())
+
+
+def ranged_trails(input: str):
+    _seeds, paths, almanac = read_input(input)
+
+    ranges = {
+        "seed": sparse_ranges.SparseRange.merge(
+            *tuple(
+                sparse_ranges.SparseRange(start, length)
+                for start, length in zip(_seeds[0::2], _seeds[1::2])
+            )
+        )
+    }
+
+    for mapping in zip(paths[:-1], paths[1:]):
+        src_ranges = ranges[mapping[0]]
+        dest_pool = []
+        for dest_start, _src_start, _range_length in almanac[mapping]:
+            src = sparse_ranges.SparseRange(_src_start, _range_length)
+            for src_range in src_ranges:
+                split = src.split(src_range)
+
+                _, overlap, _ = split
+                if overlap is None:
+                    dest_pool.append(src_range)
+                    continue
+                dest_pool.append(overlap + (dest_start - _src_start))
+
+        ranges[mapping[1]] = sparse_ranges.SparseRange.merge(*dest_pool)
+        print(ranges)
+
+
+ranged_trails(
+    r"""seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+
+fertilizer-to-water map:
+49 53 8
+0 11 42
+42 0 7
+57 7 4
+
+water-to-light map:
+88 18 7
+18 25 70
+
+light-to-temperature map:
+45 77 23
+81 45 19
+68 64 13
+
+temperature-to-humidity map:
+0 69 1
+1 0 69
+
+humidity-to-location map:
+60 56 37
+56 93 4"""
+)
+exit()
 
 
 def main():
