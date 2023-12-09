@@ -3,7 +3,7 @@ from collections.abc import Iterator
 import re
 from typing import Callable, Mapping, NamedTuple, Optional, TypeAlias, Union
 
-from advent_of_code import sparse_ranges, utils
+from advent_of_code import utils
 
 Paths: TypeAlias = tuple[str, ...]
 SeedMappings: TypeAlias = dict[int, tuple[int, ...]]
@@ -73,37 +73,41 @@ def lowest_location(input: str, loc: str) -> int:
 
 
 def ranged_trails(input: str):
-    _seeds, paths, almanac = read_input(input)
+    _seeds, paths, _almanac = read_input(input)
 
-    ranges = {
-        "seed": sparse_ranges.SparseRange.merge(
-            *tuple(
-                sparse_ranges.SparseRange(start, length)
-                for start, length in zip(_seeds[0::2], _seeds[1::2])
-            )
-        )
+    seeds = tuple(
+        (start, start + length - 1) for start, length in zip(_seeds[0::2], _seeds[1::2])
+    )
+    almanac: Mapping[tuple[str, str], list[Callable[[int], int | None]]] = {
+        k: [converter_factory(*w) for w in v] for k, v in _almanac.items()
     }
-
-    for mapping in zip(paths[:-1], paths[1:]):
-        src_ranges = ranges[mapping[0]]
-        dest_pool = []
-        for dest_start, _src_start, _range_length in almanac[mapping]:
-            src = sparse_ranges.SparseRange(_src_start, _range_length)
-            for src_range in src_ranges:
-                split = src.split(src_range)
-
-                _, overlap, _ = split
-                if overlap is None:
-                    dest_pool.append(src_range)
-                    continue
-                dest_pool.append(overlap + (dest_start - _src_start))
-
-        ranges[mapping[1]] = sparse_ranges.SparseRange.merge(*dest_pool)
-        print(ranges)
+    mapped = {}
+    for seed in seeds:
+        print(seed)
+        path = [seed]
+        for src, dest in zip(paths[:-1], paths[1:]):
+            val = path[-1]
+            for converter in almanac[(src, dest)]:
+                next_val = tuple(map(converter, val))
+                if None not in next_val:
+                    path.append(next_val)
+                    break
+            else:
+                path.append(val)
+        mapped[seed] = tuple(path)
+    return tuple(paths), mapped
 
 
-ranged_trails(
-    r"""seeds: 79 14 55 13
+def lowest_ranged_location(input: str, loc: str) -> int:
+    """Find the lower location at a specific position."""
+    paths, mappings = ranged_trails(input)
+    i = paths.index(loc)
+    return min(mapping[i][0] for mapping in mappings.values())
+
+
+print(
+    lowest_ranged_location(
+        r"""seeds: 79 14 55 13
 
 seed-to-soil map:
 50 98 2
@@ -135,7 +139,9 @@ temperature-to-humidity map:
 
 humidity-to-location map:
 60 56 37
-56 93 4"""
+56 93 4""",
+        "location",
+    )
 )
 exit()
 
