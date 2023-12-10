@@ -25,7 +25,7 @@ def max_per_game(games: str) -> dict[int, dict[ColorNames, int]]:
 
 
 def possible_games(
-    max_balls: dict[ColorNames, int]
+    max_balls: dict[ColorNames, int],
 ) -> Callable[[str], tuple[int, ...]]:
     """Get a function used to filter the games and return possible IDs given a dictionary containing the maximum number of balls of each color."""
 
