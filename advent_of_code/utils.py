@@ -4,7 +4,7 @@ import os
 
 
 @contextlib.contextmanager
-def contents():
+def contents():  # pragma: no cover
     frame_records = inspect.stack()[2]
     calling_module = inspect.getmodulename(frame_records[1])
     with open(

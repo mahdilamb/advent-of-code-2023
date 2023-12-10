@@ -4,13 +4,14 @@ dependencies = ["numpy", "scipy"]
 name = "advent-of-code"
 version = "2023.12.05-2"
 [tool.setuptools.package-dir]
-"advent_of_code" = "advent_of_code"
+"" = "advent_of_code"
 [project.optional-dependencies]
 all = ["advent-of-code[dev]"]
 dev = [
   "ruff",
   "pytest",
   "mypy",
+  "pytest-coverage"
 ]
 [tool.coverage.report]
 exclude_also = [
