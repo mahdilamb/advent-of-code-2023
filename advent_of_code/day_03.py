@@ -70,8 +70,8 @@ def get_part_numbers(text: str) -> tuple[int, ...]:
 
 def main():
     with utils.contents() as contents:
-        print("Part one:", sum(get_part_numbers((contents))))
-        print("Part two:", sum(get_gear_ratios((contents))))
+        utils.print_part_one(sum(get_part_numbers((contents))))
+        utils.print_part_two(sum(get_gear_ratios((contents))))
 
 
 if __name__ == "__main__":

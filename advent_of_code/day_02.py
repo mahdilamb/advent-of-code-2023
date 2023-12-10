@@ -49,11 +49,10 @@ def sum_of_powers(games: str):
 
 def main():
     with utils.contents() as contents:
-        print(
-            "Part one:",
+        utils.print_part_one(
             sum(possible_games({"red": 12, "green": 13, "blue": 14})(contents)),
         )
-        print("Part two:", sum_of_powers(contents))
+        utils.print_part_two(sum_of_powers(contents))
 
 
 if __name__ == "__main__":

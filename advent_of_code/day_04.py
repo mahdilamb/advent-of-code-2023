@@ -45,8 +45,8 @@ def num_cards(input: str) -> int:
 
 def main():
     with utils.contents() as contents:
-        print("Part one:", sum(scores(contents).values()))
-        print("Part two:", num_cards(contents))
+        utils.print_part_one(sum(scores(contents).values()))
+        utils.print_part_two(num_cards(contents))
 
 
 if __name__ == "__main__":

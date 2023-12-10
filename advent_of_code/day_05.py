@@ -205,8 +205,8 @@ def lowest_ranged_location(input: str, loc: str) -> int:
 def main():
     """Find the results for part one and two."""
     with utils.contents() as contents:
-        print("Part one:", lowest_location(contents, "location"))
-        print("Part two:", lowest_ranged_location(contents, "location"))
+        utils.print_part_one( lowest_location(contents, "location"))
+        utils.print_part_two( lowest_ranged_location(contents, "location"))
 
 
 if __name__ == "__main__":

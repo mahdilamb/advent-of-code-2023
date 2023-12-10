@@ -1,1 +1,3 @@
-__version__ = "2023.12.06-2"
+from advent_of_code import utils
+
+__version__ = utils.version()

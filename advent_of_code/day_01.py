@@ -46,8 +46,8 @@ def document_calibration(document: str, use_extended: bool = True) -> int:
 
 def main():
     with utils.contents() as contents:
-        print("Part one:", document_calibration(contents, use_extended=False))
-        print("Part two:", document_calibration(contents))
+        utils.print_part_one(document_calibration(contents, use_extended=False))
+        utils.print_part_two(document_calibration(contents))
 
 
 if __name__ == "__main__":
