@@ -2,16 +2,18 @@
 authors = [{name = "Mahdi Lamb", email = "mahdilamb@gmail.com"}]
 dependencies = ["numpy", "scipy"]
 name = "advent-of-code"
-version = "2023.12.05-2"
+version = "2023.12.06-1"
 [tool.setuptools.package-dir]
-"" = "advent_of_code"
+"advent_of_code" = "advent_of_code"
 [project.optional-dependencies]
-all = ["advent-of-code[dev]"]
+all = ["advent-of-code[dev,test]"]
 dev = [
   "ruff",
-  "pytest",
   "mypy",
-  "pytest-coverage"
+]
+test = [
+  "pytest",
+  "pytest-coverage",
 ]
 [tool.coverage.report]
 exclude_also = [

@@ -5,6 +5,7 @@ on:
         
 jobs:
     qc:
+        name: Run QC and unit tests
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v3
@@ -16,3 +17,4 @@ jobs:
           - run: pip install .[all]
           - run: pytest --cov=advent_of_code --cov-report term-missing
           - run: ruff check advent_of_code
+            if: always()
