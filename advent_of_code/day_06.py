@@ -85,8 +85,8 @@ def margin_of_error_optimized(input: str) -> int:
 
 def main():
     with utils.contents() as contents:
-        print("Part 1", margin_of_error(*parse_input_to_race_combos(contents)))
-        print("Part 2", margin_of_error_optimized(contents))
+        utils.print_part_one(margin_of_error(*parse_input_to_race_combos(contents)))
+        utils.print_part_two(margin_of_error_optimized(contents))
 
 
 if __name__ == "__main__":
