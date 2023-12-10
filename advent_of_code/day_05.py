@@ -7,7 +7,7 @@ from typing import Callable, Mapping, NamedTuple, Sequence, TypeAlias
 from advent_of_code import utils
 
 Paths: TypeAlias = tuple[str, ...]
-SeedMappings: TypeAlias = dict[int, tuple[int, ...]]
+ItemizedSeedMappings: TypeAlias = dict[int, tuple[int, ...]]
 MAPS = re.compile(r"^(\w+)-to-(\w+) map:\n([\s\S]+?)(?:^$|\Z)", re.M)
 DIGIT = re.compile(r"\d+")
 
@@ -21,28 +21,17 @@ class AlmanacRow(NamedTuple):
 
     @property
     def src_end(self):
+        """Get the end point of the row."""
         return self.src_start + self.range_length
 
     @property
     def offset(self):
+        """Get the amount to move from src to destination."""
         return self.dest_start - self.src_start
 
     def __repr__(self) -> str:
+        """Show a string representation of this record."""
         return f"[{self.src_start},{self.src_end})=>{self.offset:+}"
-
-
-def converter_factory(row: AlmanacRow) -> Callable[[int], int | None]:
-    """Create a converter that uses the range information."""
-    dest_start, src_start, range_length = row
-    max_src = src_start + range_length
-    diff = dest_start - src_start
-
-    def converter(x: int) -> int | None:
-        if src_start <= x < max_src:
-            return diff + x
-        return None
-
-    return converter
 
 
 def read_input(input: str):
@@ -63,13 +52,46 @@ def read_input(input: str):
     return seeds, paths, dict(almanac)
 
 
-def trails(input: str) -> tuple[Paths, SeedMappings]:
-    """Find the paths and the seed mappings from the input text."""
+def converter_factory(row: AlmanacRow) -> Callable[[int], int | None]:
+    """Create a converter that uses the range information."""
+    dest_start, src_start, range_length = row
+    max_src = src_start + range_length
+    diff = dest_start - src_start
+
+    def converter(x: int) -> int | None:
+        if src_start <= x < max_src:
+            return diff + x
+        return None
+
+    return converter
+
+
+def trails(input: str) -> tuple[Paths, ItemizedSeedMappings]:
+    """Find the paths and the seed mappings from the input text.
+
+    Use the `read_input` function to return the seeds, paths and the encodings
+    for the almanac. Create a converter that takes each seed and converts it
+    to the next level and keep a record of it.
+
+    Parameters
+    ----------
+    input : str
+        The string describing the seeds and how to convert from seeds to
+        locations.
+
+    Returns
+    -------
+    tuple[Paths, SeedMappings]
+        A tuple containing the relationships (e.g. `seed`, `soil`,...) and then
+        the mappings for each starting seed (seed) : (seed, soil). Such that a
+        dictionary can be made from each path and seed to find the exact trail
+        that has been traced.
+    """
     seeds, paths, _almanac = read_input(input)
     almanac: Mapping[tuple[str, str], list[Callable[[int], int | None]]] = {
         k: [converter_factory(w) for w in v] for k, v in _almanac.items()
     }
-    mapped: SeedMappings = {}
+    mapped: ItemizedSeedMappings = {}
     for seed in seeds:
         path = [seed]
         for src, dest in zip(paths[:-1], paths[1:]):
@@ -86,7 +108,9 @@ def trails(input: str) -> tuple[Paths, SeedMappings]:
 
 
 def lowest_location(input: str, loc: str) -> int:
-    """Find the lower location at a specific position."""
+    """Find the lowest location at a specific position
+
+    The calculation assume the seeds are individual starting points."""
     paths, mappings = trails(input)
     i = paths.index(loc)
     return min(mapping[i] for mapping in mappings.values())
@@ -95,7 +119,26 @@ def lowest_location(input: str, loc: str) -> int:
 def ranged_converter_factory(
     almanac: Sequence[AlmanacRow]
 ) -> Callable[[tuple[int, int]], Sequence[tuple[int, int]]]:
-    """Create a converter using the almanac over ranges"""
+    """Create a converter using the almanac over ranges.
+
+    The converter works by sorting the almanac rows and, if the item is
+    out-of-range, will return the item as is. If in range, it will find the
+    specific range that is relevant for the start and stop of the range. If
+    these are the same almanac record, then use a single converter.
+    If it spans multiple ranges, split the first and last range on its overlap;
+    and then convert the intermediate ranges as the span the full range of
+    values.
+
+    Parameters
+    ----------
+    almanac : Sequence[AlmanacRow]
+        A sequence of the raw almanac records.
+
+    Returns
+    -------
+    Callable[[tuple[int, int]], Sequence[tuple[int, int]]]
+        The converter as described in the description.
+    """
     _almanac = sorted(almanac, key=lambda row: row.src_start)
 
     almanac = [_almanac[0]]
