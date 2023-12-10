@@ -2,7 +2,7 @@
 default: help
 
 tests: # Run tests using pytest.
-	@pytest --cov=advent_of_code --cov-report term-missing
+	@pytest --cov advent_of_code --cov-report term-missing
 
 ruff: # Format the python files using ruff.
 	@ruff check --fix advent_of_code && ruff format advent_of_code
