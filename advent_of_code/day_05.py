@@ -1,7 +1,8 @@
+"""Code for day 5."""
+import bisect
 from collections import defaultdict
-from collections.abc import Iterator
 import re
-from typing import Callable, Mapping, NamedTuple, Optional, TypeAlias, Union
+from typing import Callable, Mapping, NamedTuple, Sequence, TypeAlias
 
 from advent_of_code import utils
 
@@ -11,10 +12,28 @@ MAPS = re.compile(r"^(\w+)-to-(\w+) map:\n([\s\S]+?)(?:^$|\Z)", re.M)
 DIGIT = re.compile(r"\d+")
 
 
-def converter_factory(
-    dest_start: int, src_start: int, range_length: int
-) -> Callable[[int], int | None]:
+class AlmanacRow(NamedTuple):
+    """Data storage for a row used in the almanac."""
+
+    dest_start: int
+    src_start: int
+    range_length: int
+
+    @property
+    def src_end(self):
+        return self.src_start + self.range_length
+
+    @property
+    def offset(self):
+        return self.dest_start - self.src_start
+
+    def __repr__(self) -> str:
+        return f"[{self.src_start},{self.src_end})=>{self.offset:+}"
+
+
+def converter_factory(row: AlmanacRow) -> Callable[[int], int | None]:
     """Create a converter that uses the range information."""
+    dest_start, src_start, range_length = row
     max_src = src_start + range_length
     diff = dest_start - src_start
 
@@ -27,17 +46,18 @@ def converter_factory(
 
 
 def read_input(input: str):
+    """Convert the input to seeds, paths and the almanac."""
     _seeds, _, maps = input.split("\n", maxsplit=2)
 
     paths = ["seed"]
-    almanac: Mapping[tuple[str, str], list[tuple[int, int, int]]] = defaultdict(list)
+    almanac: Mapping[tuple[str, str], list[AlmanacRow]] = defaultdict(list)
 
     for m in MAPS.finditer(maps):
         src_name, dest_name, _ranges = m.groups()
         paths.append(dest_name)
         for ranges in _ranges.splitlines():
             almanac[(src_name, dest_name)].append(
-                tuple(map(int, DIGIT.findall(ranges)))
+                AlmanacRow(*map(int, DIGIT.findall(ranges)))
             )
     seeds = tuple(map(int, DIGIT.findall(_seeds)))
     return seeds, paths, dict(almanac)
@@ -47,7 +67,7 @@ def trails(input: str) -> tuple[Paths, SeedMappings]:
     """Find the paths and the seed mappings from the input text."""
     seeds, paths, _almanac = read_input(input)
     almanac: Mapping[tuple[str, str], list[Callable[[int], int | None]]] = {
-        k: [converter_factory(*w) for w in v] for k, v in _almanac.items()
+        k: [converter_factory(w) for w in v] for k, v in _almanac.items()
     }
     mapped: SeedMappings = {}
     for seed in seeds:
@@ -72,83 +92,78 @@ def lowest_location(input: str, loc: str) -> int:
     return min(mapping[i] for mapping in mappings.values())
 
 
-def ranged_trails(input: str):
-    _seeds, paths, _almanac = read_input(input)
+def ranged_converter_factory(
+    almanac: Sequence[AlmanacRow]
+) -> Callable[[tuple[int, int]], Sequence[tuple[int, int]]]:
+    """Create a converter using the almanac over ranges"""
+    _almanac = sorted(almanac, key=lambda row: row.src_start)
 
-    seeds = tuple(
-        (start, start + length - 1) for start, length in zip(_seeds[0::2], _seeds[1::2])
+    almanac = [_almanac[0]]
+    for a in _almanac[1:]:
+        if span := (a.src_start - almanac[-1].src_end):
+            almanac.append(
+                AlmanacRow(
+                    almanac[-1].src_end,
+                    almanac[-1].src_end,
+                    span,
+                )
+            )
+
+        almanac.append(a)
+    almanac_start, almanac_end = _almanac[0].src_start, _almanac[-1].src_end
+
+    def convert(val: tuple[int, int]) -> Sequence[tuple[int, int]]:
+        start, stop = val[0], val[0] + val[1]
+        if start >= almanac_end or stop <= almanac_start:
+            return (val,)
+        start_grp, stop_grp = (
+            bisect.bisect_right(almanac, start, key=lambda row: row.src_start),
+            bisect.bisect_left(almanac, stop, key=lambda row: row.src_start),
+        )
+        if start_grp == 0:
+            return (val,)
+        if start_grp == stop_grp:
+            return ((val[0] + almanac[start_grp - 1].offset, val[1]),)
+        first, *intermediate, last = almanac[start_grp - 1 : stop_grp]
+        result = [
+            (start + first.offset, first.src_end - start),
+            *[(row.dest_start, row.range_length) for row in intermediate],
+            (last.src_start + last.offset, stop - last.src_start),
+        ]
+        return tuple(result)
+
+    return convert
+
+
+def ranged_trails(input: str) -> dict[str, Sequence[tuple[int, int]]]:
+    """Find the ranges that map to each layer."""
+    _seeds, paths, _almanac = read_input(input)
+    results: dict[str, Sequence[tuple[int, int]]] = dict(
+        seed=tuple((a, b) for a, b in zip(_seeds[0::2], _seeds[1::2]))
     )
-    almanac: Mapping[tuple[str, str], list[Callable[[int], int | None]]] = {
-        k: [converter_factory(*w) for w in v] for k, v in _almanac.items()
-    }
-    mapped = {}
-    for seed in seeds:
-        print(seed)
-        path = [seed]
-        for src, dest in zip(paths[:-1], paths[1:]):
-            val = path[-1]
-            for converter in almanac[(src, dest)]:
-                next_val = tuple(map(converter, val))
-                if None not in next_val:
-                    path.append(next_val)
-                    break
-            else:
-                path.append(val)
-        mapped[seed] = tuple(path)
-    return tuple(paths), mapped
+
+    for src_name, dest_name in zip(paths[:-1], paths[1:]):
+        almanac = ranged_converter_factory(_almanac[(src_name, dest_name)])
+        output = ()
+        for src in results[src_name]:
+            output = (*output, *almanac(src))
+
+        results[dest_name] = output
+    return results
 
 
 def lowest_ranged_location(input: str, loc: str) -> int:
     """Find the lower location at a specific position."""
-    paths, mappings = ranged_trails(input)
-    i = paths.index(loc)
-    return min(mapping[i][0] for mapping in mappings.values())
 
-
-print(
-    lowest_ranged_location(
-        r"""seeds: 79 14 55 13
-
-seed-to-soil map:
-50 98 2
-52 50 48
-
-soil-to-fertilizer map:
-0 15 37
-37 52 2
-39 0 15
-
-fertilizer-to-water map:
-49 53 8
-0 11 42
-42 0 7
-57 7 4
-
-water-to-light map:
-88 18 7
-18 25 70
-
-light-to-temperature map:
-45 77 23
-81 45 19
-68 64 13
-
-temperature-to-humidity map:
-0 69 1
-1 0 69
-
-humidity-to-location map:
-60 56 37
-56 93 4""",
-        "location",
-    )
-)
-exit()
+    paths = ranged_trails(input)
+    return min(el[0] for el in paths[loc])
 
 
 def main():
+    """Find the results for part one and two."""
     with utils.contents() as contents:
         print("Part one:", lowest_location(contents, "location"))
+        print("Part two:", lowest_ranged_location(contents, "location"))
 
 
 if __name__ == "__main__":
