@@ -1,7 +1,7 @@
 import functools
 import math
 import re
-from typing import Callable, NamedTuple, Sequence
+from typing import NamedTuple, Sequence
 import advent_of_code.utils as utils
 
 DIGIT = re.compile(r"\d+")

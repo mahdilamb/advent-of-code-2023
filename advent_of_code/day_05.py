@@ -117,7 +117,7 @@ def lowest_location(input: str, loc: str) -> int:
 
 
 def ranged_converter_factory(
-    almanac: Sequence[AlmanacRow]
+    almanac: Sequence[AlmanacRow],
 ) -> Callable[[tuple[int, int]], Sequence[tuple[int, int]]]:
     """Create a converter using the almanac over ranges.
 
