@@ -54,6 +54,10 @@ def test_margin_of_error_from_input(sample):
     assert day_06.margin_of_error(*day_06.parse_input_to_race_combos(sample)) == 288
 
 
+def test_margin_of_error_from_input_with_kerning_fixed(sample):
+    assert day_06.margin_of_error_optimized(sample) == 71503
+
+
 if __name__ == "__main__":
     import sys
 

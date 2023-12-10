@@ -1,8 +1,11 @@
 [project]
 authors = [{name = "Mahdi Lamb", email = "mahdilamb@gmail.com"}]
 dependencies = ["numpy", "scipy"]
+dynamic = ["version"]
 name = "advent-of-code"
-version = "2023.12.06-1"
+[tool.setuptools.dynamic]
+version = {attr = "advent_of_code.__version__"}
+
 [tool.setuptools.package-dir]
 "advent_of_code" = "advent_of_code"
 [project.optional-dependencies]

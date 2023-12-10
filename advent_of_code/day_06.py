@@ -14,8 +14,10 @@ class RaceRecords(NamedTuple):
     distance: int
 
 
-def parse_input(input: str) -> Sequence[RaceRecords]:
+def parse_input(input: str, fix_kerning: bool = False) -> Sequence[RaceRecords]:
     """Parse the input into records."""
+    if fix_kerning:
+        input = input.replace(" ", "")
     return tuple(
         RaceRecords(time, distance)
         for time, distance in zip(
@@ -65,9 +67,26 @@ def margin_of_error(*races: Sequence[int]):
     return math.prod(tuple(len(race) for race in races))
 
 
+def margin_of_error_optimized(input: str) -> int:
+    race_details = parse_input(input, fix_kerning=True)[0]
+    race_fn = functools.partial(race, duration=race_details.time)
+    first = next(
+        held_for
+        for held_for in range(race_details.time)
+        if race_fn(held_for) > race_details.distance
+    )
+    last = next(
+        held_for
+        for held_for in reversed(range(race_details.time))
+        if race_fn(held_for) > race_details.distance
+    )
+    return last - first + 1
+
+
 def main():
     with utils.contents() as contents:
-        print("Day 2", margin_of_error(*parse_input_to_race_combos(contents)))
+        print("Part 1", margin_of_error(*parse_input_to_race_combos(contents)))
+        print("Part 2", margin_of_error_optimized(contents))
 
 
 if __name__ == "__main__":
